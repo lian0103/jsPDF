@@ -71,14 +71,6 @@ const genImg = () => {
     }
 };
 
-const clearImg = () => {
-    try {
-        imgUrl.value = null;
-        emit('getImg', imgUrl.value);
-    } catch (e) {
-        console.warn(e);
-    }
-};
 
 // 清空签名
 const clearPanel = (e) => {
@@ -225,10 +217,10 @@ const initPdf = async () => {
 const scaleStyleComputed = computed(() => {
     let widthUnit = Math.ceil(pdfState.value.width / 20);
     let heightUnit = Math.ceil(pdfState.value.height / 20);
-    let unit = pdfState.value.scale > 1 ? pdfState.value.scale * 10 - 10 : 10 - pdfState.value.scale * 10;
+    let unit = pdfState.value.scale > 1 ? pdfState.value.scale * 10 - 10 : 0;
 
     return {
-        padding: `${unit * heightUnit + 20}px ${unit * widthUnit + 20}px`,
+        padding: `${unit * heightUnit}px ${unit * widthUnit}px`,
     };
 });
 
@@ -263,7 +255,6 @@ onMounted(() => {
             <div>
                 <button type="danger" @click.native.prevent="clearPanel">清空筆跡</button>
                 <button type="primary" @click="genImg">生成圖片</button>
-                <button type="primary" @click="clearImg">清空圖片</button>
                 <button
                     @click="
                         () => {
@@ -288,8 +279,8 @@ onMounted(() => {
                 <button @click="saveAll">儲存全部</button>
             </div>
         </div>
-        <div class="">
-            <div class="pdfs-box scroll">
+        <div class="scroll">
+            <div class="pdfs-box" :style="scaleStyleComputed">
                 <div class="pdf-Item" :style="pdfsBoxStyleComputed">
                     <div v-for="page in pdfState.numPages" :key="page" :style="scaleStyleInnerComputed">
                         <canvas
@@ -318,17 +309,14 @@ button {
     display: flex;
 }
 .btns-box {
-    width: 350px;
+    width: 150px; 
+    margin-right: 100px;
 }
 .pdf-Item {
     padding: 20px;
 }
-.pdf-Item div {
-    margin: auto;
-}
-
 .scroll {
-    max-width: 800px;
+    width: 800px;
     max-height: 90vh;
     overflow: scroll;
     background: #ccc;
