@@ -171,11 +171,11 @@ const renderPage = (page) => {
                 // Prepare canvas using PDF page dimensions
                 var canvas = document.getElementById(`the-canvas-${pdfState.value.page}`);
                 var context = canvas.getContext('2d');
+
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
-
-                pdfState.value.width = viewport.width;
-                pdfState.value.height = viewport.height;
+                pdfState.value.width = canvas.width;
+                pdfState.value.height = canvas.height;
 
                 // Render PDF page into canvas context
                 var renderContext = {
@@ -225,9 +225,20 @@ const initPdf = async () => {
 const scaleStyleComputed = computed(() => {
     let widthUnit = Math.ceil(pdfState.value.width / 20);
     let heightUnit = Math.ceil(pdfState.value.height / 20);
-    let unit = pdfState.value.scale * 10 - 10;
+    let unit = pdfState.value.scale > 1 ? pdfState.value.scale * 10 - 10 : 10 - pdfState.value.scale * 10;
+
     return {
         padding: `${unit * heightUnit + 20}px ${unit * widthUnit + 20}px`,
+    };
+});
+
+const pdfsBoxStyleComputed = computed(() => {
+    let width = pdfState.value.width;
+    let height = pdfState.value.height;
+
+    return {
+        width: `${width}px`,
+        height: `${height}px`,
     };
 });
 
@@ -277,9 +288,9 @@ onMounted(() => {
                 <button @click="saveAll">儲存全部</button>
             </div>
         </div>
-        <div :class="pdfState.scale > 1 ? 'scroll' : ''">
-            <div class="pdfs-box">
-                <div class="pdf-Item" :style="scaleStyleComputed">
+        <div class="">
+            <div class="pdfs-box scroll">
+                <div class="pdf-Item" :style="pdfsBoxStyleComputed">
                     <div v-for="page in pdfState.numPages" :key="page" :style="scaleStyleInnerComputed">
                         <canvas
                             v-show="page === pdfState.page"
@@ -296,7 +307,6 @@ onMounted(() => {
 <style>
 canvas {
     border: 1px solid black;
-    direction: ltr;
 }
 button {
     margin-left: 10px;
@@ -308,16 +318,18 @@ button {
     display: flex;
 }
 .btns-box {
-    width: 50%;
-}
-
-.pdfs-box {
-    width: 100%;
+    width: 350px;
 }
 .pdf-Item {
+    padding: 20px;
 }
+.pdf-Item div {
+    margin: auto;
+}
+
 .scroll {
-    width: 75vw;
+    max-width: 800px;
+    max-height: 90vh;
     overflow: scroll;
     background: #ccc;
 }
