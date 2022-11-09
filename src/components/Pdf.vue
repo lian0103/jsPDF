@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, defineComponent, ref, nextTick, reactive } from 'vue';
+import { onMounted, ref, nextTick, watch, computed } from 'vue';
 import jsPDF from 'jsPDF';
 
 const props = defineProps({
@@ -16,6 +16,8 @@ const pdfState = ref({
     page: 1,
     numPages: 0,
     scale: 1,
+    height: 0,
+    width: 0,
 });
 let currentPDF = null;
 let isLoaded = {};
@@ -26,14 +28,10 @@ const scaleChange = (type) => {
     switch (type) {
         case 'minus': {
             pdfState.value.scale = (pdfState.value.scale * 10 - 1) / 10;
-            isLoaded[''+pdfState.value.page] = false;//todo
-            renderPage(pdfState.value.page);
             break;
         }
         case 'plus': {
             pdfState.value.scale = (pdfState.value.scale * 10 + 1) / 10;
-            isLoaded[''+pdfState.value.page] = false; //todo
-            renderPage(pdfState.value.page);
             break;
         }
     }
@@ -169,14 +167,15 @@ const renderPage = (page) => {
     if (!isLoaded['' + page]) {
         currentPDF.getPage(page).then(
             function (page) {
-                // console.log('Page loaded', page);
-                var viewport = page.getViewport({ scale: pdfState.value.scale });
-                console.log(viewport);
+                var viewport = page.getViewport({ scale: 1 });
                 // Prepare canvas using PDF page dimensions
                 var canvas = document.getElementById(`the-canvas-${pdfState.value.page}`);
                 var context = canvas.getContext('2d');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
+
+                pdfState.value.width = viewport.width;
+                pdfState.value.height = viewport.height;
 
                 // Render PDF page into canvas context
                 var renderContext = {
@@ -223,48 +222,73 @@ const initPdf = async () => {
     );
 };
 
+const scaleStyleComputed = computed(() => {
+    let widthUnit = Math.ceil(pdfState.value.width / 20);
+    let heightUnit = Math.ceil(pdfState.value.height / 20);
+    let unit = pdfState.value.scale * 10 - 10;
+    return {
+        padding: `${unit * heightUnit + 20}px ${unit * widthUnit + 20}px`,
+    };
+});
+
+const scaleStyleInnerComputed = computed(() => {
+    return {
+        transform: `scale(${pdfState.value.scale})`,
+    };
+});
+
 onMounted(() => {
     initPdf();
 });
 </script>
 
 <template>
-    <div>
-        <h1>PDF.js 'Hello, world!' example</h1>
-        <div v-for="page in pdfState.numPages" :key="page">
-            <canvas v-show="page === pdfState.page" :id="`the-canvas-${page}`" @mousedown="onMouseDown"></canvas>
+    <div class="pdf-wrapper">
+        <div class="btns-box">
+            <!-- <canvas ref="canvas" id="the-canvas" @mousedown="onMouseDown"></canvas> -->
+            <p>頁碼:{{ `${pdfState.page} /${pdfState.numPages}` }}</p>
+            <p>scale: {{ pdfState.scale }}</p>
+            <p v-if="isSaving">saving...</p>
+            <div>
+                <button type="danger" @click.native.prevent="clearPanel">清空筆跡</button>
+                <button type="primary" @click="genImg">生成圖片</button>
+                <button type="primary" @click="clearImg">清空圖片</button>
+                <button
+                    @click="
+                        () => {
+                            scaleChange('minus');
+                        }
+                    "
+                >
+                    scale --
+                </button>
+                <button
+                    @click="
+                        () => {
+                            scaleChange('plus');
+                        }
+                    "
+                >
+                    scale ++
+                </button>
+                <button @click="save">單頁PDF儲存</button>
+                <button @click="nextPage">下一頁</button>
+                <button @click="prePage">上一頁</button>
+                <button @click="saveAll">儲存全部</button>
+            </div>
         </div>
-
-        <!-- <canvas ref="canvas" id="the-canvas" @mousedown="onMouseDown"></canvas> -->
-        <p>頁碼:{{ `${pdfState.page} /${pdfState.numPages}` }}</p>
-
-        <p v-if="isSaving">saving...</p>
-        <div>
-            <button type="danger" @click.native.prevent="clearPanel">清空筆跡</button>
-            <button type="primary" @click="genImg">生成圖片</button>
-            <button type="primary" @click="clearImg">清空圖片</button>
-            <button
-                @click="
-                    () => {
-                        scaleChange('minus');
-                    }
-                "
-            >
-                scale --
-            </button>
-            <button
-                @click="
-                    () => {
-                        scaleChange('plus');
-                    }
-                "
-            >
-                scale ++
-            </button>
-            <button @click="save">單頁PDF儲存</button>
-            <button @click="nextPage">下一頁</button>
-            <button @click="prePage">上一頁</button>
-            <button @click="saveAll">儲存全部</button>
+        <div :class="pdfState.scale > 1 ? 'scroll' : ''">
+            <div class="pdfs-box">
+                <div class="pdf-Item" :style="scaleStyleComputed">
+                    <div v-for="page in pdfState.numPages" :key="page" :style="scaleStyleInnerComputed">
+                        <canvas
+                            v-show="page === pdfState.page"
+                            :id="`the-canvas-${page}`"
+                            @mousedown="onMouseDown"
+                        ></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -277,5 +301,24 @@ canvas {
 button {
     margin-left: 10px;
     margin-top: 10px;
+}
+
+.pdf-wrapper {
+    height: auto;
+    display: flex;
+}
+.btns-box {
+    width: 50%;
+}
+
+.pdfs-box {
+    width: 100%;
+}
+.pdf-Item {
+}
+.scroll {
+    width: 75vw;
+    overflow: scroll;
+    background: #ccc;
 }
 </style>

@@ -8,7 +8,7 @@ const imgRef = ref(null);
 <template>
     <div class="box">
         <Pdf
-            url="./test2.pdf"
+            url="./test.pdf"
             @getImg="
                 (imgURL) => {
                     imgRef = imgURL;
@@ -23,5 +23,7 @@ const imgRef = ref(null);
 .box {
     display: flex;
     position: relative;
+    justify-items: flex-start;
+    align-items: flex-start;
 }
 </style>
