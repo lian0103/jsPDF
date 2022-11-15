@@ -248,7 +248,6 @@ onMounted(() => {
 <template>
     <div class="pdf-wrapper">
         <div class="btns-box">
-            <!-- <canvas ref="canvas" id="the-canvas" @mousedown="onMouseDown"></canvas> -->
             <p>頁碼:{{ `${pdfState.page} /${pdfState.numPages}` }}</p>
             <p>scale: {{ pdfState.scale }}</p>
             <p v-if="isSaving">saving...</p>
