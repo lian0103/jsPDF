@@ -38,19 +38,18 @@ const scaleChange = (type) => {
 };
 
 // 开始签名
-const onMouseDown = (e) => {
+function onMouseDown(e) {
     const el = e.target || e.srcElement;
     const ctx = el.getContext('2d');
     ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
     el.onmousemove = function (e) {
         if (e.which === 0) {
             el.onmousemove = null;
             el.onmouseup = null;
             return;
         }
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
         ctx.lineTo(e.offsetX, e.offsetY);
         ctx.stroke();
     };
@@ -59,7 +58,7 @@ const onMouseDown = (e) => {
         el.onmouseup = null;
     };
     el.focus();
-};
+}
 
 const genImg = () => {
     try {
@@ -70,7 +69,6 @@ const genImg = () => {
         console.warn(e);
     }
 };
-
 
 // 清空签名
 const clearPanel = (e) => {
@@ -308,7 +306,7 @@ button {
     display: flex;
 }
 .btns-box {
-    width: 150px; 
+    width: 150px;
     margin-right: 100px;
 }
 .pdf-Item {
